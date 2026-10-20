@@ -1,8 +1,16 @@
+using System.Text.Json.Serialization;
+
+using Tenisu.Api.Endpoints;
+using Tenisu.Application;
 using Tenisu.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddOpenApi();
+builder.Services.AddProblemDetails();
+builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
+
+builder.Services.AddApplicationServices();
 builder.Services.AddInfrastructureServices();
 
 var app = builder.Build();
@@ -14,7 +22,10 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+app.UseStatusCodePages();
+
 app.MapHealthChecks("/healthcheck");
+app.MapPlayerEndpoints();
 
 app.UseHttpsRedirection();
 

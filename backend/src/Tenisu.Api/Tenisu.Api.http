@@ -1,2 +1,15 @@
 @Tenisu.Api_HostAddress = http://localhost:5287
 
+### Health check
+GET {{Tenisu.Api_HostAddress}}/healthcheck
+
+### Known player
+GET {{Tenisu.Api_HostAddress}}/api/players/52
+Accept: application/json
+
+### Unknown player (404 problem)
+GET {{Tenisu.Api_HostAddress}}/api/players/999
+Accept: application/json
+
+### Non-numeric id (404 from routing)
+GET {{Tenisu.Api_HostAddress}}/api/players/abc

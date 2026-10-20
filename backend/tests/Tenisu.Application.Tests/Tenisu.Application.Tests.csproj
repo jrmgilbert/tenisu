@@ -13,6 +13,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Tenisu.Application\Tenisu.Application.csproj" />
+    <ProjectReference Include="..\..\src\Tenisu.Infrastructure\Tenisu.Infrastructure.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Tenisu.Core.Tests\TestPlayers.cs" Link="TestPlayers.cs" />
   </ItemGroup>
 
   <ItemGroup>

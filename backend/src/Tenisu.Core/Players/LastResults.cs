@@ -20,5 +20,7 @@ public sealed record LastResults
 
     public static LastResults Parse(string stored) => From(stored.Select(c => c - '0'));
 
+    public IReadOnlyList<int> AsNumbers() => [.. _wins.Select(w => w ? 1 : 0)];
+
     public override string ToString() => string.Concat(_wins.Select(w => w ? '1' : '0'));
 }
