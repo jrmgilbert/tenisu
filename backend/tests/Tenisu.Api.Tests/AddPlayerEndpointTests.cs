@@ -4,6 +4,9 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Testing;
+
 using Tenisu.Core.Players;
 
 namespace Tenisu.Api.Tests;
@@ -134,6 +137,19 @@ public sealed class AddPlayerEndpointTests : IDisposable
         body["shortName"] = "N.DJO";
 
         ApiAssert.IsProblem(await PostAsync(body), HttpStatusCode.Conflict);
+    }
+
+    [Fact]
+    public async Task A_taken_short_name_logs_a_warning_with_the_reason()
+    {
+        var body = ValidBody();
+        body["shortName"] = "N.DJO";
+
+        await PostAsync(body);
+
+        Assert.Contains(_api.Services.GetFakeLogCollector().GetSnapshot(), r =>
+            r.Level == LogLevel.Warning && r.Id.Name == "RequestRejected" &&
+            r.Message == "POST /api/players rejected with 409: Short name 'N.DJO' is already taken.");
     }
 
     [Fact]

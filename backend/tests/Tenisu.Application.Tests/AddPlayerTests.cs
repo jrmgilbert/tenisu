@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Logging.Testing;
 
 using Tenisu.Application.Common;
 using Tenisu.Application.Players;
@@ -18,7 +21,7 @@ public class AddPlayerTests
     {
         await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
 
-        var created = await new PlayerCommands(db.Context).AddAsync(Emma(), TestContext.Current.CancellationToken);
+        var created = await new PlayerCommands(db.Context, NullLogger<PlayerCommands>.Instance).AddAsync(Emma(), TestContext.Current.CancellationToken);
 
         Assert.NotEqual(0, created.Id);
         Assert.DoesNotContain(created.Id, TestPlayers.Fixture().Select(p => p.Id));
@@ -27,12 +30,26 @@ public class AddPlayerTests
     }
 
     [Fact]
+    public async Task Adding_a_player_logs_it_at_information()
+    {
+        await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
+        var logger = new FakeLogger<PlayerCommands>();
+
+        var created = await new PlayerCommands(db.Context, logger).AddAsync(Emma(), TestContext.Current.CancellationToken);
+
+        var record = logger.Collector.LatestRecord;
+        Assert.Equal(LogLevel.Information, record.Level);
+        Assert.Equal("PlayerAdded", record.Id.Name);
+        Assert.Equal($"Player E.ECH added with id {created.Id}", record.Message);
+    }
+
+    [Fact]
     public async Task A_taken_short_name_throws_ConflictException()
     {
         await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
 
         await Assert.ThrowsAsync<ConflictException>(() =>
-            new PlayerCommands(db.Context).AddAsync(Emma("N.DJO"), TestContext.Current.CancellationToken));
+            new PlayerCommands(db.Context, NullLogger<PlayerCommands>.Instance).AddAsync(Emma("N.DJO"), TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -41,7 +58,7 @@ public class AddPlayerTests
         await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
 
         await Assert.ThrowsAsync<ConflictException>(() =>
-            new PlayerCommands(db.Context).AddAsync(Emma(" n.djo "), TestContext.Current.CancellationToken));
+            new PlayerCommands(db.Context, NullLogger<PlayerCommands>.Instance).AddAsync(Emma(" n.djo "), TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -50,7 +67,7 @@ public class AddPlayerTests
         await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
 
         await Assert.ThrowsAsync<DomainException>(() =>
-            new PlayerCommands(db.Context).AddAsync(Emma(last: [2]), TestContext.Current.CancellationToken));
+            new PlayerCommands(db.Context, NullLogger<PlayerCommands>.Instance).AddAsync(Emma(last: [2]), TestContext.Current.CancellationToken));
         Assert.Equal(5, await db.Context.Players.CountAsync(TestContext.Current.CancellationToken));
     }
 }

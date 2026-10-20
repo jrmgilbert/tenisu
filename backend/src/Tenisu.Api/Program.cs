@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 
+using Microsoft.OpenTelemetry;
+
 using Scalar.AspNetCore;
 
 using Tenisu.Api;
@@ -8,6 +10,8 @@ using Tenisu.Application;
 using Tenisu.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.UseMicrosoftOpenTelemetry(o => o.AzureMonitor.TracesPerSecond = 5.0);
 
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();

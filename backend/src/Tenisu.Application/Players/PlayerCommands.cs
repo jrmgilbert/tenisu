@@ -1,11 +1,12 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 using Tenisu.Application.Common;
 using Tenisu.Core.Players;
 
 namespace Tenisu.Application.Players;
 
-public sealed class PlayerCommands(ITenisuDbContext db)
+public sealed partial class PlayerCommands(ITenisuDbContext db, ILogger<PlayerCommands> logger)
 {
     public async Task<PlayerDto> AddAsync(NewPlayer input, CancellationToken ct)
     {
@@ -28,8 +29,13 @@ public sealed class PlayerCommands(ITenisuDbContext db)
             throw ShortNameTaken(player.ShortName);
         }
 
+        LogPlayerAdded(logger, player.ShortName, player.Id);
+
         return player.ToDto();
     }
 
     private static ConflictException ShortNameTaken(string shortName) => new($"Short name '{shortName}' is already taken.");
+
+    [LoggerMessage(EventId = 1001, EventName = "PlayerAdded", Level = LogLevel.Information, Message = "Player {ShortName} added with id {PlayerId}")]
+    private static partial void LogPlayerAdded(ILogger logger, string shortName, int playerId);
 }
