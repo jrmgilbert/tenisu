@@ -8,6 +8,8 @@ namespace Tenisu.Api.Endpoints;
 
 public static class PlayerEndpoints
 {
+    public const string GetPlayerRoute = "GetPlayer";
+
     public static IEndpointRouteBuilder MapPlayerEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/players").WithTags("Players");
@@ -22,8 +24,15 @@ public static class PlayerEndpoints
              .WithSummary("Country with the best win ratio, average BMI and median height");
 
         group.MapGet("/{id:int}", GetPlayerAsync)
-             .WithName("GetPlayer")
+             .WithName(GetPlayerRoute)
              .WithSummary("One player by id");
+
+        group.MapPost("/", AddPlayerAsync)
+             .WithName("AddPlayer")
+             .WithSummary("Add a player")
+             .ProducesValidationProblem()
+             .ProducesProblem(StatusCodes.Status409Conflict)
+             .ProducesProblem(StatusCodes.Status415UnsupportedMediaType);
 
         return app;
     }
@@ -37,4 +46,11 @@ public static class PlayerEndpoints
 
     private static async Task<Results<Ok<PlayerDto>, NotFound>> GetPlayerAsync(int id, PlayerQueries queries, CancellationToken ct) =>
         await queries.GetAsync(id, ct) is { } player ? TypedResults.Ok(player) : TypedResults.NotFound();
+
+    private static async Task<CreatedAtRoute<PlayerDto>> AddPlayerAsync(AddPlayerRequest request, PlayerCommands commands, CancellationToken ct)
+    {
+        var player = await commands.AddAsync(request.ToNewPlayer(), ct);
+
+        return TypedResults.CreatedAtRoute(player, GetPlayerRoute, new { id = player.Id });
+    }
 }

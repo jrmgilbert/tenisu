@@ -2,6 +2,7 @@ using System.Text.Json.Serialization;
 
 using Scalar.AspNetCore;
 
+using Tenisu.Api;
 using Tenisu.Api.Endpoints;
 using Tenisu.Application;
 using Tenisu.Infrastructure;
@@ -11,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddProblemDetails();
 builder.Services.AddValidation();
+builder.Services.AddExceptionHandler<TenisuExceptionHandler>();
 builder.Services.ConfigureHttpJsonOptions(o => o.SerializerOptions.Converters.Add(new JsonStringEnumConverter()));
 
 builder.Services.AddApplicationServices();
@@ -26,6 +28,7 @@ if (app.Environment.IsDevelopment())
     app.MapScalarApiReference();
 }
 
+app.UseExceptionHandler();
 app.UseStatusCodePages();
 
 app.MapHealthChecks("/healthcheck");

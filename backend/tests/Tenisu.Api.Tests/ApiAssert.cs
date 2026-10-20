@@ -19,4 +19,15 @@ internal static class ApiAssert
         Assert.Equal(status, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
     }
+
+    public static async Task HasValidationErrorAsync(HttpResponseMessage response, string field)
+    {
+        IsProblem(response, HttpStatusCode.BadRequest);
+
+        var errors = (await response.Content.ReadFromJsonAsync<JsonElement>()).GetProperty("errors");
+
+        Assert.Contains(errors.EnumerateObject(), e => Leaf(e.Name).Equals(Leaf(field), StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static string Leaf(string path) => path[(path.LastIndexOf('.') + 1)..];
 }

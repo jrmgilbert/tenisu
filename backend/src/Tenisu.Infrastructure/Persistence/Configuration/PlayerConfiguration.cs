@@ -10,6 +10,7 @@ internal sealed class PlayerConfiguration : IEntityTypeConfiguration<Player>
     public void Configure(EntityTypeBuilder<Player> b)
     {
         b.HasKey(p => p.Id);
+        b.HasIndex(p => p.ShortName).IsUnique();
         b.Property(p => p.Sex).HasConversion<string>();
 
         b.ComplexProperty(p => p.Country, c =>

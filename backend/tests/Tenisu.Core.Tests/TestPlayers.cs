@@ -1,4 +1,6 @@
-﻿using Tenisu.Core.Common;
+﻿using System.Globalization;
+
+using Tenisu.Core.Common;
 using Tenisu.Core.Players;
 
 namespace Tenisu.Core.Tests;
@@ -6,7 +8,7 @@ namespace Tenisu.Core.Tests;
 public static class TestPlayers
 {
     public static Player Make(int id, int rank = 10, int points = 1000, string country = "FRA", int weight = 75000, int height = 180, int[]? last = null) =>
-        Create(id, "Test", "Player", $"T.{id:D3}", Sex.M, country, rank, points, weight, height, age: 25, last ?? [], "tbd", "tbd");
+        Create(id, "Test", "Player", $"T.{Letters(id)}", Sex.M, country, rank, points, weight, height, age: 25, last ?? [], "tbd", "tbd");
 
     public static Player[] Fixture() =>
     [
@@ -23,23 +25,9 @@ public static class TestPlayers
     ];
 
     private static Player Create(int id, string firstName, string lastName, string shortName, Sex sex, string countryCode,
-        int rank, int points, int weight, int height, int age, int[] last, string countryPicture, string picture) => new()
-        {
-            Id = id,
-            FirstName = firstName,
-            LastName = lastName,
-            ShortName = shortName,
-            Sex = sex,
-            Country = new Country(countryCode, countryPicture),
-            Picture = picture,
-            Data = new PlayerData
-            {
-                Rank = rank,
-                Points = points,
-                Weight = weight,
-                Height = height,
-                Age = age,
-                Last = LastResults.From(last)
-            }
-        };
+        int rank, int points, int weight, int height, int age, int[] last, string countryPicture, string picture) =>
+        Player.Create(firstName, lastName, shortName, sex, Country.Create(countryCode, countryPicture), picture,
+            PlayerData.Create(rank, points, weight, height, age, LastResults.From(last)), id);
+
+    private static string Letters(int id) => string.Concat(id.ToString("D3", CultureInfo.InvariantCulture).Select(d => (char)('A' + d - '0')));
 }

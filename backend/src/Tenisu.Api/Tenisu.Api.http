@@ -29,3 +29,29 @@ Accept: application/json
 
 ### Non-numeric id (404 from routing)
 GET {{Tenisu.Api_HostAddress}}/api/players/abc
+
+### Add a player (201 + Location; run twice for a 409)
+POST {{Tenisu.Api_HostAddress}}/api/players
+Content-Type: application/json
+
+{
+  "firstName": "Emma",
+  "lastName": "Echo",
+  "shortName": "E.ECH",
+  "sex": "F",
+  "country": { "code": "ITA", "picture": "" },
+  "picture": "",
+  "data": { "rank": 5, "points": 1200, "weight": 62000, "height": 172, "age": 24, "last": [1, 0, 1, 1, 0] }
+}
+
+### Invalid player (400 validation problem)
+POST {{Tenisu.Api_HostAddress}}/api/players
+Content-Type: application/json
+
+{
+  "firstName": "Emma",
+  "shortName": "eech",
+  "sex": "F",
+  "country": { "code": "ita" },
+  "data": { "rank": 0, "points": 1200, "weight": 62000, "height": 172, "age": 24, "last": [1, 2] }
+}

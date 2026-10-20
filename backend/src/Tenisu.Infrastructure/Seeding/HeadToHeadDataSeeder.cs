@@ -30,25 +30,15 @@ internal static class HeadToHeadDataSeeder
         var seed = JsonSerializer.Deserialize<HeadToHeadJsonObject>(stream, JsonOptions)
                    ?? throw new InvalidOperationException($"'{filePath}' is empty.");
 
-        return seed.Players.Select(p => new Player
-        {
-            Id = p.Id,
-            FirstName = p.Firstname,
-            LastName = p.Lastname,
-            ShortName = p.Shortname,
-            Sex = ParseSex(p.Sex),
-            Country = new Country(p.Country.Code, p.Country.Picture),
-            Picture = p.Picture,
-            Data = new PlayerData
-            {
-                Rank = p.Data.Rank,
-                Points = p.Data.Points,
-                Weight = p.Data.Weight,
-                Height = p.Data.Height,
-                Age = p.Data.Age,
-                Last = LastResults.From(p.Data.Last)
-            }
-        }).ToList();
+        return seed.Players.Select(p => Player.Create(
+            p.Firstname,
+            p.Lastname,
+            p.Shortname,
+            ParseSex(p.Sex),
+            Country.Create(p.Country.Code, p.Country.Picture),
+            p.Picture,
+            PlayerData.Create(p.Data.Rank, p.Data.Points, p.Data.Weight, p.Data.Height, p.Data.Age, LastResults.From(p.Data.Last)),
+            p.Id)).ToList();
     }
 
     private static Sex ParseSex(string value) => value switch

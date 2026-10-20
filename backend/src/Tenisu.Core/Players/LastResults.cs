@@ -4,6 +4,8 @@ namespace Tenisu.Core.Players;
 
 public sealed record LastResults
 {
+    public const int MaxResults = 10;
+
     private readonly bool[] _wins;
 
     private LastResults(bool[] wins) => _wins = wins;
@@ -15,6 +17,9 @@ public sealed record LastResults
     public static LastResults From(IEnumerable<int> results)
     {
         var values = results.ToArray();
+
+        if (values.Length > MaxResults)
+            throw new DomainException($"Keep at most {MaxResults} recent results.");
 
         if (values.Any(r => r is not (0 or 1)))
             throw new DomainException("Results must be 1 (win) or 0 (loss).");
