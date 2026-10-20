@@ -28,7 +28,7 @@ public sealed partial class PlayerCommands(ITenisuDbContext db, ILogger<PlayerCo
         {
             await db.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException)
+        catch (DuplicateKeyException)
         {
             // The unique index on ShortName caught a concurrent insert of the same short name
             throw ShortNameTaken(player.ShortName);

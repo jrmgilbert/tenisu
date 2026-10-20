@@ -82,6 +82,26 @@ public class AddPlayerTests
     }
 
     [Fact]
+    public async Task A_duplicate_key_on_save_throws_ConflictException()
+    {
+        await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
+        var failingDb = new FailingSaveDb(db.Context, new DuplicateKeyException(new InvalidOperationException()));
+
+        await Assert.ThrowsAsync<ConflictException>(() =>
+            new PlayerCommands(failingDb, NullLogger<PlayerCommands>.Instance).AddAsync(Emma(), TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task Other_save_failures_are_not_reported_as_conflicts()
+    {
+        await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
+        var failingDb = new FailingSaveDb(db.Context, new DbUpdateException("Disk I/O error"));
+
+        await Assert.ThrowsAsync<DbUpdateException>(() =>
+            new PlayerCommands(failingDb, NullLogger<PlayerCommands>.Instance).AddAsync(Emma(), TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task A_domain_violation_throws_and_saves_nothing()
     {
         await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());

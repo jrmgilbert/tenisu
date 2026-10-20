@@ -7,8 +7,9 @@ namespace Tenisu.Core.Tests;
 
 public static class TestPlayers
 {
-    public static Player Make(int id, int rank = 10, int points = 1000, string country = "FRA", int weight = 75000, int height = 180, int[]? last = null) =>
-        Create(id, "Test", "Player", $"T.{Letters(id)}", Sex.M, country, rank, points, weight, height, age: 25, last ?? [], "tbd", "tbd");
+    public static Player Make(int id, int rank = 10, int points = 1000, string country = "FRA", int weight = 75000, int height = 180, int[]? last = null,
+        string? shortName = null) =>
+        Create(id, "Test", "Player", shortName ?? $"T.{Letters(id)}", Sex.M, country, rank, points, weight, height, age: 25, last ?? [], "tbd", "tbd");
 
     public static Player[] Fixture() =>
     [
