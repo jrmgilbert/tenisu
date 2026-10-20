@@ -62,6 +62,26 @@ public class AddPlayerTests
     }
 
     [Fact]
+    public async Task The_last_free_slot_can_be_taken()
+    {
+        await using var db = await TestDb.CreateAsync([.. Enumerable.Range(1, PlayerCommands.MaxPlayers - 1).Select(id => TestPlayers.Make(id))]);
+
+        await new PlayerCommands(db.Context, NullLogger<PlayerCommands>.Instance).AddAsync(Emma(), TestContext.Current.CancellationToken);
+
+        Assert.Equal(PlayerCommands.MaxPlayers, await db.Context.Players.CountAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task A_full_player_list_throws_ConflictException_and_saves_nothing()
+    {
+        await using var db = await TestDb.CreateAsync([.. Enumerable.Range(1, PlayerCommands.MaxPlayers).Select(id => TestPlayers.Make(id))]);
+
+        await Assert.ThrowsAsync<ConflictException>(() =>
+            new PlayerCommands(db.Context, NullLogger<PlayerCommands>.Instance).AddAsync(Emma(), TestContext.Current.CancellationToken));
+        Assert.Equal(PlayerCommands.MaxPlayers, await db.Context.Players.CountAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
     public async Task A_domain_violation_throws_and_saves_nothing()
     {
         await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());

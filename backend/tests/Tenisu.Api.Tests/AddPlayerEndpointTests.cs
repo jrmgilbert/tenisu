@@ -4,9 +4,13 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 
+using Microsoft.AspNetCore.Http.Metadata;
+using Microsoft.AspNetCore.Routing;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Testing;
 
+using Tenisu.Api.Endpoints;
 using Tenisu.Core.Players;
 
 namespace Tenisu.Api.Tests;
@@ -150,6 +154,27 @@ public sealed class AddPlayerEndpointTests : IDisposable
         Assert.Contains(_api.Services.GetFakeLogCollector().GetSnapshot(), r =>
             r.Level == LogLevel.Warning && r.Id.Name == "RequestRejected" &&
             r.Message == "POST /api/players rejected with 409: Short name 'N.DJO' is already taken.");
+    }
+
+    [Fact]
+    public async Task Too_many_additions_from_one_client_return_429_problem_with_retry_after()
+    {
+        HttpResponseMessage? response = null;
+        for (var i = 0; i <= RateLimitPolicies.PlayerWritesPerMinute; i++)
+            response = await _client.PostAsJsonAsync("/api/players", PlayerCapacityEndpointTests.ValidPlayer($"R.{(char)('A' + i / 26)}{(char)('A' + i % 26)}A"),
+                TestContext.Current.CancellationToken);
+
+        ApiAssert.IsProblem(response!, HttpStatusCode.TooManyRequests);
+        Assert.NotNull(response!.Headers.RetryAfter);
+    }
+
+    [Fact]
+    public void Adding_a_player_limits_the_request_body_size()
+    {
+        var addPlayer = _api.Services.GetRequiredService<EndpointDataSource>().Endpoints
+            .Single(e => e.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName == RouteNames.AddPlayer);
+
+        Assert.Equal(PlayerEndpoints.MaxAddPlayerBodyBytes, addPlayer.Metadata.GetMetadata<IRequestSizeLimitMetadata>()?.MaxRequestBodySize);
     }
 
     [Fact]

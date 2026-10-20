@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
 using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 
 using Tenisu.Api.Requests.Players;
 using Tenisu.Application.Players;
@@ -9,6 +10,8 @@ namespace Tenisu.Api.Endpoints;
 
 public static class PlayerEndpoints
 {
+    public const int MaxAddPlayerBodyBytes = 16 * 1024;
+
     public static IEndpointRouteBuilder MapPlayerEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/players").WithTags("Players");
@@ -29,9 +32,16 @@ public static class PlayerEndpoints
         group.MapPost("/", AddPlayerAsync)
              .WithName(RouteNames.AddPlayer)
              .WithSummary("Add a player")
+             .WithDescription($"At most {PlayerCommands.MaxPlayers} players in total and {RateLimitPolicies.PlayerWritesPerMinute} additions per minute per client. "
+                            + "Players are kept in memory only: they are lost when the app restarts, is redeployed, "
+                            + "or scales to zero after a few minutes without traffic.")
+             .RequireRateLimiting(RateLimitPolicies.PlayerWrites)
+             .WithMetadata(new RequestSizeLimitAttribute(MaxAddPlayerBodyBytes))
              .ProducesValidationProblem()
              .ProducesProblem(StatusCodes.Status409Conflict)
-             .ProducesProblem(StatusCodes.Status415UnsupportedMediaType);
+             .ProducesProblem(StatusCodes.Status413PayloadTooLarge)
+             .ProducesProblem(StatusCodes.Status415UnsupportedMediaType)
+             .ProducesProblem(StatusCodes.Status429TooManyRequests);
 
         return app;
     }
