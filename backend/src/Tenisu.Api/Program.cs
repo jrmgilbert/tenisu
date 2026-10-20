@@ -1,5 +1,7 @@
 using System.Text.Json.Serialization;
 
+using Scalar.AspNetCore;
+
 using Tenisu.Api.Endpoints;
 using Tenisu.Application;
 using Tenisu.Infrastructure;
@@ -20,6 +22,7 @@ await app.Services.InitializeTenisuDataAsync();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseStatusCodePages();
