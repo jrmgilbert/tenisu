@@ -1,0 +1,81 @@
+name: CD
+
+on:
+  push:
+    branches: [main]
+    paths: [backend/**, global.json, .github/workflows/ci.yml, .github/workflows/cd.yml]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  IMAGE_REPOSITORY: ghcr.io/jrmgilbert/tenisu-api
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    needs: ci
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: backend
+    outputs:
+      image: ${{ steps.version.outputs.image }}
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+
+      - name: Compute version
+        id: version
+        run: |
+          version="1.0.${{ github.run_number }}"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "image=$IMAGE_REPOSITORY:$version" >> "$GITHUB_OUTPUT"
+
+      - name: Publish image to GitHub Container Registry
+        env:
+          SDK_CONTAINER_REGISTRY_UNAME: ${{ github.actor }}
+          SDK_CONTAINER_REGISTRY_PWORD: ${{ secrets.GITHUB_TOKEN }}
+        run: >
+          dotnet publish src/Tenisu.Api --configuration Release --os linux --arch x64 -t:PublishContainer
+          -p ContainerImageTag=${{ steps.version.outputs.version }}
+          -p Version=${{ steps.version.outputs.version }}
+
+  deploy:
+    needs: publish
+    if: vars.AZURE_CLIENT_ID != ''
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy the new image to Azure Container Apps
+        run: |
+          az extension add --name containerapp --upgrade --only-show-errors
+          az containerapp update --name ${{ vars.AZURE_CONTAINER_APP }} --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
+            --image ${{ needs.publish.outputs.image }} --output none
+
+      - name: Smoke test
+        run: |
+          fqdn=$(az containerapp show --name ${{ vars.AZURE_CONTAINER_APP }} --resource-group ${{ vars.AZURE_RESOURCE_GROUP }} \
+            --query properties.configuration.ingress.fqdn --output tsv)
+          curl --fail --silent --show-error --retry 10 --retry-delay 6 --retry-all-errors "https://$fqdn/healthcheck"
