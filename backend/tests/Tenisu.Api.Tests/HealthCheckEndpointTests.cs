@@ -16,10 +16,10 @@ public sealed class HealthCheckEndpointTests : IDisposable
     [Fact]
     public async Task Returns_200_Healthy_when_the_database_answers()
     {
-        var response = await _api.CreateClient().GetAsync("/healthcheck");
+        var response = await _api.CreateClient().GetAsync("/healthcheck", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Equal("Healthy", await response.Content.ReadAsStringAsync());
+        Assert.Equal("Healthy", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -30,12 +30,12 @@ public sealed class HealthCheckEndpointTests : IDisposable
         await using (var scope = _api.Services.CreateAsyncScope())
         {
             var db = scope.ServiceProvider.GetRequiredService<TenisuDbContext>();
-            await db.Database.ExecuteSqlRawAsync("DROP TABLE Players");
+            await db.Database.ExecuteSqlRawAsync("DROP TABLE Players", TestContext.Current.CancellationToken);
         }
 
-        var response = await client.GetAsync("/healthcheck");
+        var response = await client.GetAsync("/healthcheck", TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.StatusCode);
-        Assert.Equal("Unhealthy", await response.Content.ReadAsStringAsync());
+        Assert.Equal("Unhealthy", await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken));
     }
 }

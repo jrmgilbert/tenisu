@@ -10,7 +10,7 @@ public class ListPlayersTests
     {
         await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
 
-        var players = await new PlayerQueries(db.Context).ListAsync(PlayerSort.BestFirst, CancellationToken.None);
+        var players = await new PlayerQueries(db.Context).ListAsync(PlayerSort.BestFirst, TestContext.Current.CancellationToken);
 
         Assert.Equal([17, 52, 102, 65, 95], players.Select(p => p.Id));
     }
@@ -20,6 +20,6 @@ public class ListPlayersTests
     {
         await using var db = await TestDb.CreateAsync();
 
-        Assert.Empty(await new PlayerQueries(db.Context).ListAsync(PlayerSort.BestFirst, CancellationToken.None));
+        Assert.Empty(await new PlayerQueries(db.Context).ListAsync(PlayerSort.BestFirst, TestContext.Current.CancellationToken));
     }
 }

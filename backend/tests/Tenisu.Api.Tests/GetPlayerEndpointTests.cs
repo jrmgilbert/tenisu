@@ -7,7 +7,7 @@ public class GetPlayerEndpointTests(TenisuApiFactory api) : IClassFixture<Tenisu
     [Fact]
     public async Task Returns_200_with_the_player()
     {
-        var json = await ApiAssert.OkJsonAsync(await api.CreateClient().GetAsync("/api/players/52"));
+        var json = await ApiAssert.OkJsonAsync(await api.CreateClient().GetAsync("/api/players/52", TestContext.Current.CancellationToken));
 
         Assert.Equal(52, json.GetProperty("id").GetInt32());
         Assert.Equal("N.DJO", json.GetProperty("shortName").GetString());
@@ -19,11 +19,11 @@ public class GetPlayerEndpointTests(TenisuApiFactory api) : IClassFixture<Tenisu
 
     [Fact]
     public async Task Returns_404_problem_for_an_unknown_id() =>
-        ApiAssert.IsProblem(await api.CreateClient().GetAsync("/api/players/999"), HttpStatusCode.NotFound);
+        ApiAssert.IsProblem(await api.CreateClient().GetAsync("/api/players/999", TestContext.Current.CancellationToken), HttpStatusCode.NotFound);
 
     [Fact]
     public async Task Returns_404_for_a_non_numeric_id() =>
-        Assert.Equal(HttpStatusCode.NotFound, (await api.CreateClient().GetAsync("/api/players/abc")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await api.CreateClient().GetAsync("/api/players/abc", TestContext.Current.CancellationToken)).StatusCode);
 
     [Theory]
     [InlineData("PUT")]
@@ -31,7 +31,7 @@ public class GetPlayerEndpointTests(TenisuApiFactory api) : IClassFixture<Tenisu
     [InlineData("DELETE")]
     public async Task Other_methods_on_a_player_return_405(string method)
     {
-        var response = await api.CreateClient().SendAsync(new HttpRequestMessage(new HttpMethod(method), "/api/players/52"));
+        var response = await api.CreateClient().SendAsync(new HttpRequestMessage(new HttpMethod(method), "/api/players/52"), TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.MethodNotAllowed, response.StatusCode);
     }

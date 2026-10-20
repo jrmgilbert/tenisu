@@ -11,7 +11,7 @@ public class GetPlayerTests
     {
         await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
 
-        var player = await new PlayerQueries(db.Context).GetAsync(102, CancellationToken.None);
+        var player = await new PlayerQueries(db.Context).GetAsync(102, TestContext.Current.CancellationToken);
 
         Assert.NotNull(player);
         Assert.Equal("S.WIL", player.ShortName);
@@ -25,6 +25,6 @@ public class GetPlayerTests
     {
         await using var db = await TestDb.CreateAsync(TestPlayers.Fixture());
 
-        Assert.Null(await new PlayerQueries(db.Context).GetAsync(999, CancellationToken.None));
+        Assert.Null(await new PlayerQueries(db.Context).GetAsync(999, TestContext.Current.CancellationToken));
     }
 }
