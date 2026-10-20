@@ -35,7 +35,7 @@ Application d'exploration de données et de statistiques sur le Tennis et ses me
 | GET     | `/api/players`                | Tous les joueurs, du meilleur au moins bon (`?sort=BestFirst`, défaut) |
 | GET     | `/api/players/{id}`           | Un joueur (404 si inconnu)                                             |
 | GET     | `/api/players/statistics`     | Pays au meilleur ratio de victoires, IMC moyen, taille médiane         |
-| POST    | `/api/players`                | Ajoute un joueur (201, 400 si invalide, 409 si nom court déjà pris)    |
+| POST    | `/api/players`                | Ajoute un joueur (201 ; 400, 409, 413 ou 429 : voir Limitations)       |
 | GET     | `/healthcheck`                | `Healthy` (200) ou `Unhealthy` (503)                                   |
 | GET     | `/scalar`, `/openapi/v1.json` | Documentation de l'API                                                 |
 
@@ -96,11 +96,17 @@ Application d'exploration de données et de statistiques sur le Tennis et ses me
 
 ## Limitations
 
+> [!WARNING]
+> **Les joueurs ajoutés ne sont pas conservés.** Les données vivent en mémoire : elles repartent du fichier JSON à chaque
+> redémarrage, à chaque déploiement, et aussi quand Azure arrête l'application après quelques minutes sans appel
+> (mise à l'échelle à zéro). Un joueur ajouté puis consulté 10 minutes plus tard peut donc avoir disparu.
+
 ### Données
 
-- Base de données en mémoire : chaque redémarrage ou déploiement repart du fichier JSON, les joueurs ajoutés par `POST` sont perdus
-- Une seule instance possible (sinon chaque réplique aurait sa propre copie des données)
-- Mise à l'échelle du service à zéro sur Azure : le premier appel froid après une inactivité prend quelques secondes
+- Base de données en mémoire, une seule instance possible (sinon chaque réplique aurait sa propre copie des données)
+- Mise à l'échelle à zéro sur Azure : le premier appel après une pause prend quelques secondes, et efface les ajouts (voir l'avertissement)
+- 100 joueurs au plus, les 5 du fichier compris : au-delà, le `POST` répond 409. Le plafond est vérifié avant l'ajout,
+  des ajouts simultanés peuvent donc le dépasser de quelques unités
 - Pas de migrations (`EnsureCreated`) : il faudrait en ajouter pour passer à une vraie base
 - Hypothèses sur le fichier : `last` = derniers résultats (1 = victoire, 0 = défaite)
 - Les nouveaux joueurs reçoivent l'id suivant le plus grand id du fichier ; un id envoyé par le client est ignoré
@@ -109,10 +115,13 @@ Application d'exploration de données et de statistiques sur le Tennis et ses me
 
 - Pas de pagination sur la liste des joueurs : à envisager en fonction de la taille prévue
 - Les statistiques chargent toute la table des joueurs en mémoire à chaque appel
-- Pas de cache, ni de limitation de débit (rate limiting) pour l'instant
+- Pas de cache pour l'instant
 
 ### API
 
+- Ajouts limités à 30 par minute et par client (adresse IP) : au-delà, 429 avec un en-tête `Retry-After`.
+  Plusieurs testeurs derrière la même adresse IP partagent cette limite
+- Corps du `POST` limité à 16 Ko : au-delà, 413
 - Les valeurs de `?sort=` sont sensibles à la casse (`BestFirst`)
 - Les clés des erreurs de validation suivent les noms C# (`Data.Rank`), pas les noms JSON (`data.rank`)
 - Le nom court doit déjà respecter le format `N.DJO` dans la requête
