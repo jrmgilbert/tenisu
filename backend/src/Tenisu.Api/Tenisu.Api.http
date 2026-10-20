@@ -3,6 +3,18 @@
 ### Health check
 GET {{Tenisu.Api_HostAddress}}/healthcheck
 
+### All players, best first (default sort)
+GET {{Tenisu.Api_HostAddress}}/api/players
+Accept: application/json
+
+### All players, explicit sort
+GET {{Tenisu.Api_HostAddress}}/api/players?sort=BestFirst
+Accept: application/json
+
+### Unknown sort (400 validation problem)
+GET {{Tenisu.Api_HostAddress}}/api/players?sort=42
+Accept: application/json
+
 ### Known player
 GET {{Tenisu.Api_HostAddress}}/api/players/52
 Accept: application/json
