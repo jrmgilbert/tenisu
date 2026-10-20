@@ -31,6 +31,20 @@ public class ListPlayersEndpointTests(TenisuApiFactory api, EmptyTenisuApiFactor
     public async Task An_unknown_sort_returns_400_problem(string sort) =>
         ApiAssert.IsProblem(await api.CreateClient().GetAsync($"/api/players?sort={sort}", TestContext.Current.CancellationToken), HttpStatusCode.BadRequest);
 
+    [Theory]
+    [InlineData("br")]
+    [InlineData("gzip")]
+    public async Task Compresses_the_list_when_the_client_accepts_it(string encoding)
+    {
+        using var request = new HttpRequestMessage(HttpMethod.Get, "/api/players");
+        request.Headers.AcceptEncoding.ParseAdd(encoding);
+
+        var response = await api.CreateClient().SendAsync(request, TestContext.Current.CancellationToken);
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Equal([encoding], response.Content.Headers.ContentEncoding);
+    }
+
     [Fact]
     public async Task Returns_an_empty_array_not_404_when_there_are_no_players()
     {

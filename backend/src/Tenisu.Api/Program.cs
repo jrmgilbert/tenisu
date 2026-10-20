@@ -21,6 +21,8 @@ builder.Services.AddValidation();
 builder.Services.AddExceptionHandler<TenisuExceptionHandler>();
 builder.Services.AddRateLimitPolicies();
 
+builder.Services.AddResponseCompression(o => o.EnableForHttps = true);
+
 // The Container Apps ingress terminates TLS and is the app's only entry point, so its X-Forwarded-* headers are trusted:
 // without them the app believes it is called over http and advertises http:// URLs (e.g. in the OpenAPI document)
 builder.Services.Configure<ForwardedHeadersOptions>(o =>
@@ -40,6 +42,7 @@ var app = builder.Build();
 await app.Services.InitializeTenisuDataAsync();
 
 app.UseForwardedHeaders();
+app.UseResponseCompression();
 
 app.MapOpenApi();
 app.MapScalarApiReference();
