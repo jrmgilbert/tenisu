@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/Tests/">
+    <Project Path="tests/Tenisu.Api.Tests/Tenisu.Api.Tests.csproj" />
+    <Project Path="tests/Tenisu.Application.Tests/Tenisu.Application.Tests.csproj" />
+    <Project Path="tests/Tenisu.Core.Tests/Tenisu.Core.Tests.csproj" />
+  </Folder>
+  <Project Path="src/Tenisu.Api/Tenisu.Api.csproj" />
+  <Project Path="src/Tenisu.Application/Tenisu.Application.csproj" />
+  <Project Path="src/Tenisu.Core/Tenisu.Core.csproj" />
+  <Project Path="src/Tenisu.Infrastructure/Tenisu.Infrastructure.csproj" />
+</Solution>
