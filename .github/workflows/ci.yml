@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+    paths: [backend/**, global.json, .github/workflows/ci.yml]
+  pull_request:
+    branches: [main]
+    paths: [backend/**, global.json, .github/workflows/ci.yml]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-dotnet@v6
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Check formatting and code style
+        run: dotnet format --verify-no-changes --no-restore
+
+      - name: Build with code analysis (warnings as errors)
+        run: dotnet build --no-restore --configuration Release -warnaserror
+
+      - name: Test
+        run: dotnet test --no-build --configuration Release
