@@ -8,6 +8,10 @@ public sealed record LastResults
 
     private LastResults(bool[] wins) => _wins = wins;
 
+    public int Played => _wins.Length;
+
+    public int Wins => _wins.Count(w => w);
+
     public static LastResults From(IEnumerable<int> results)
     {
         var values = results.ToArray();

@@ -15,6 +15,10 @@ Accept: application/json
 GET {{Tenisu.Api_HostAddress}}/api/players?sort=42
 Accept: application/json
 
+### Statistics
+GET {{Tenisu.Api_HostAddress}}/api/players/statistics
+Accept: application/json
+
 ### Known player
 GET {{Tenisu.Api_HostAddress}}/api/players/52
 Accept: application/json

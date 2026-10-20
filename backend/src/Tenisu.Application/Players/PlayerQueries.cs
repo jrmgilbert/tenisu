@@ -19,6 +19,9 @@ public sealed class PlayerQueries(ITenisuDbContext db)
         return [.. (await sorted.ToListAsync(ct)).Select(p => p.ToDto())];
     }
 
+    public async Task<PlayerStatisticsDto> GetStatisticsAsync(CancellationToken ct) =>
+        PlayerStatistics.Compute(await db.Players.AsNoTracking().ToListAsync(ct)).ToDto();
+
     public async Task<PlayerDto?> GetAsync(int id, CancellationToken ct) =>
         (await db.Players.AsNoTracking().SingleOrDefaultAsync(p => p.Id == id, ct))?.ToDto();
 }

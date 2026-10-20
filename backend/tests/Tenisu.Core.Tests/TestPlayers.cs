@@ -5,8 +5,8 @@ namespace Tenisu.Core.Tests;
 
 public static class TestPlayers
 {
-    public static Player Make(int id, int rank = 10, int points = 1000) =>
-        Create(id, "Test", "Player", $"T.{id:D3}", Sex.M, "FRA", rank, points, weight: 75000, height: 180, age: 25, [], "tbd", "tbd");
+    public static Player Make(int id, int rank = 10, int points = 1000, string country = "FRA", int weight = 75000, int height = 180, int[]? last = null) =>
+        Create(id, "Test", "Player", $"T.{id:D3}", Sex.M, country, rank, points, weight, height, age: 25, last ?? [], "tbd", "tbd");
 
     public static Player[] Fixture() =>
     [

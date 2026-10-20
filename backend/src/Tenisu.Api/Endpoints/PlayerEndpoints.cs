@@ -17,6 +17,10 @@ public static class PlayerEndpoints
              .WithSummary("All players, best first by default")
              .ProducesValidationProblem();
 
+        group.MapGet("/statistics", GetStatisticsAsync)
+             .WithName("GetPlayerStatistics")
+             .WithSummary("Country with the best win ratio, average BMI and median height");
+
         group.MapGet("/{id:int}", GetPlayerAsync)
              .WithName("GetPlayer")
              .WithSummary("One player by id");
@@ -27,6 +31,9 @@ public static class PlayerEndpoints
     private static async Task<Ok<IReadOnlyList<PlayerDto>>> ListPlayersAsync(PlayerQueries queries, CancellationToken ct,
         [EnumDataType(typeof(PlayerSort))] PlayerSort sort = PlayerSort.BestFirst) =>
         TypedResults.Ok(await queries.ListAsync(sort, ct));
+
+    private static async Task<Ok<PlayerStatisticsDto>> GetStatisticsAsync(PlayerQueries queries, CancellationToken ct) =>
+        TypedResults.Ok(await queries.GetStatisticsAsync(ct));
 
     private static async Task<Results<Ok<PlayerDto>, NotFound>> GetPlayerAsync(int id, PlayerQueries queries, CancellationToken ct) =>
         await queries.GetAsync(id, ct) is { } player ? TypedResults.Ok(player) : TypedResults.NotFound();
