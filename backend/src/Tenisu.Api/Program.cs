@@ -38,6 +38,4 @@ app.UseStatusCodePages();
 app.MapHealthChecks("/healthcheck");
 app.MapPlayerEndpoints();
 
-app.UseHttpsRedirection();
-
 app.Run();
