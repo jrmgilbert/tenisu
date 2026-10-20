@@ -2,33 +2,32 @@
 
 using Microsoft.AspNetCore.Http.HttpResults;
 
+using Tenisu.Api.Requests.Players;
 using Tenisu.Application.Players;
 
 namespace Tenisu.Api.Endpoints;
 
 public static class PlayerEndpoints
 {
-    public const string GetPlayerRoute = "GetPlayer";
-
     public static IEndpointRouteBuilder MapPlayerEndpoints(this IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/players").WithTags("Players");
 
         group.MapGet("/", ListPlayersAsync)
-             .WithName("ListPlayers")
-             .WithSummary("All players, best first by default")
+             .WithName(RouteNames.ListPlayers)
+             .WithSummary("List players (best first)")
              .ProducesValidationProblem();
 
         group.MapGet("/statistics", GetStatisticsAsync)
-             .WithName("GetPlayerStatistics")
-             .WithSummary("Country with the best win ratio, average BMI and median height");
+             .WithName(RouteNames.GetStatistics)
+             .WithSummary("Get players statistics (country with the best win ratio, average BMI and median height)");
 
         group.MapGet("/{id:int}", GetPlayerAsync)
-             .WithName(GetPlayerRoute)
-             .WithSummary("One player by id");
+             .WithName(RouteNames.GetPlayer)
+             .WithSummary("Get a player by his/her id");
 
         group.MapPost("/", AddPlayerAsync)
-             .WithName("AddPlayer")
+             .WithName(RouteNames.AddPlayer)
              .WithSummary("Add a player")
              .ProducesValidationProblem()
              .ProducesProblem(StatusCodes.Status409Conflict)
@@ -51,6 +50,6 @@ public static class PlayerEndpoints
     {
         var player = await commands.AddAsync(request.ToNewPlayer(), ct);
 
-        return TypedResults.CreatedAtRoute(player, GetPlayerRoute, new { id = player.Id });
+        return TypedResults.CreatedAtRoute(player, RouteNames.GetPlayer, new { id = player.Id });
     }
 }

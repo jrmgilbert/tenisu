@@ -2,7 +2,7 @@
 
 using Tenisu.Core.Players;
 
-namespace Tenisu.Api.Endpoints;
+namespace Tenisu.Api.Requests.Players;
 
 public sealed record PlayerDataRequest : IValidatableObject
 {
