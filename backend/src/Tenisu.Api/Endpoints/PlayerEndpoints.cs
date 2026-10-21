@@ -23,11 +23,13 @@ public static class PlayerEndpoints
 
         group.MapGet("/statistics", GetStatisticsAsync)
              .WithName(RouteNames.GetStatistics)
-             .WithSummary("Get players statistics (country with the best win ratio, average BMI and median height)");
+             .WithSummary("Get players statistics")
+             .WithDescription("Returns the country with the best win ratio, the average BMI and median height of all players");
 
         group.MapGet("/{id:int}", GetPlayerAsync)
              .WithName(RouteNames.GetPlayer)
-             .WithSummary("Get a player by his/her id");
+             .WithSummary("Get a player")
+             .WithDescription("Gets a player by its numerical ID");
 
         group.MapPost("/", AddPlayerAsync)
              .WithName(RouteNames.AddPlayer)

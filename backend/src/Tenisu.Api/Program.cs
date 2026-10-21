@@ -15,7 +15,20 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.UseMicrosoftOpenTelemetry(o => o.AzureMonitor.TracesPerSecond = 5.0);
 
-builder.Services.AddOpenApi();
+builder.Services.AddOpenApi(options =>
+{
+    options.AddDocumentTransformer((document, context, cancellationToken) =>
+    {
+        document.Info = new()
+        {
+            Title = "Tenisu API",
+            Version = "v1",
+            Description = "API d'accès et de manipulation des données de Tenisu",
+        };
+
+        return Task.CompletedTask;
+    });
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddValidation();
 builder.Services.AddExceptionHandler<TenisuExceptionHandler>();
